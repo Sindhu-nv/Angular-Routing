@@ -5,16 +5,15 @@ import { MessageService } from '../messages/message.service';
 import { IProduct } from './product';
 import { ProductService } from './product.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { jsonpFactory } from '../../../node_modules/@angular/http/src/http_module';
 
 @Component({
-    templateUrl: './app/products/product-edit.component.html',
+    templateUrl: './app/products/product-child.component.html',
     styleUrls: ['./app/products/product-edit.component.css']
 })
-export class ProductEditComponent implements OnInit {
-    pageTitle: string = 'Product Edit';
+export class ProductChildComponent implements OnInit {
+    pageTitle: string = 'Product Child Edit';
     errorMessage: string;
-
+    private dataIsValid: { [key: string]: boolean } = {};
     private currentProduct: IProduct;
     private originalProduct: IProduct;
     get product(): IProduct {
@@ -30,9 +29,11 @@ export class ProductEditComponent implements OnInit {
     }
 
     reset(): void {
+        this.dataIsValid = null;
         this.currentProduct = null;
         this.originalProduct = null;
     }
+
     constructor(
         private productService: ProductService,
         private messageService: MessageService,
@@ -86,7 +87,7 @@ export class ProductEditComponent implements OnInit {
     }
 
     saveProduct(): void {
-        if (true === true) {
+        if (this.isValid(null)) {
             this.productService.saveProduct(this.product)
                 .subscribe(
                     () => this.onSaveComplete(`${this.product.productName} was saved`),
@@ -104,5 +105,30 @@ export class ProductEditComponent implements OnInit {
         this.reset();
         // Navigate back to the product list
         this.router.navigate(['/products']);
+    }
+
+    validate(): void {
+        this.dataIsValid = {};
+        if (this.product.productName && this.product.productName.length >= 3 && this.product.productCode) {
+            this.dataIsValid['info'] = true;
+        }
+        else {
+            this.dataIsValid['info'] = false;
+        }
+
+        if (this.product.category && this.product.category.length >= 3) {
+            this.dataIsValid['tags'] = true;
+        }
+        else {
+            this.dataIsValid['tags'] = false;
+        }
+    }
+
+    isValid(path: string): boolean {
+        this.validate();
+        if (path) {
+            return this.dataIsValid[path];
+        }
+        return (this.dataIsValid && Object.keys(this.dataIsValid).every(d => this.dataIsValid[d] === true));
     }
 }
